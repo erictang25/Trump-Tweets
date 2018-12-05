@@ -19,6 +19,10 @@ from datetime import datetime
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.svm import SVC
 from textblob import TextBlob
+import nltk
+# nltk.download('brown')
+# nltk.download('punkt')
+# nltk.download('averaged_perceptron_tagger')
 
 
 def time_to_min(time):
@@ -62,7 +66,9 @@ polarity = []
 subjectivity = []
 https = []
 hashtag = []
+crookedHillary = []
 numnouns = []
+pos = []
 for line in data[1:]:
     puncs = re.compile("[,.!?;:-]")
     line[1] = re.sub(puncs, " ", line[1])
@@ -78,9 +84,14 @@ for line in data[1:]:
         hashtag.append(1)
     else:
         hashtag.append(0)
+    if 'Crooked Hillary' in line[1]:
+        crookedHillary.append(1)
+    else:
+        crookedHillary.append(0)
     favcount.append(line[3])
     text = TextBlob(line[1])
     numnouns.append(len(text.noun_phrases))
+    pos.append(text.pos_tags)
     polarity.append(text.sentiment.polarity)
     subjectivity.append(text.sentiment.subjectivity)
     retweetcount.append(line[12])
@@ -97,9 +108,17 @@ xTr = np.zeros((N,feature_dimension))
 for x in range(0,N):
     row = np.zeros(feature_dimension)
     tweet = text_words[x]
+    tweetLen = len(tweet)
+    pos_row = np.zeros(50)
     for word in tweet:
         row[hash(word) % feature_dimension] = 1
+
+    for word,tag in pos[x]:
+        pos_row[hash(tag) % 50] = 1
+
     xTr[x,:] = row
+    np.append(xTr[x,:], pos_row)
+    np.append(xTr[x, :], tweetLen)
 
 favcount = np.reshape(favcount, (len(favcount),1))
 retweetcount = np.reshape(retweetcount, (len(retweetcount),1))
@@ -111,6 +130,7 @@ subjectivity = np.reshape(subjectivity, (len(retweetcount),1))
 https = np.reshape(https, (len(retweetcount), 1))
 hashtag = np.reshape(hashtag, (len(retweetcount), 1))
 numnouns = np.reshape(numnouns, (len(retweetcount), 1))
+crookedHillary = np.reshape(crookedHillary, (len(retweetcount), 1))
 
 xTr = np.append(xTr, favcount, 1)
 xTr = np.append(xTr, retweetcount, 1)
@@ -122,6 +142,7 @@ xTr = np.append(xTr, subjectivity, 1)
 xTr = np.append(xTr, https, 1)
 xTr = np.append(xTr, hashtag, 1)
 xTr = np.append(xTr, numnouns, 1)
+xTr = np.append(xTr, crookedHillary, 1)
 
 
 yTr = np.zeros(N)
@@ -144,6 +165,7 @@ subjectivity = []
 https = []
 hashtag = []
 numnouns = []
+pos = []
 for line in data[1:]:
     puncs = re.compile("[,.!?;:-]")
     line[1] = re.sub(puncs, " ", line[1])
@@ -162,6 +184,7 @@ for line in data[1:]:
     favcount.append(line[3])
     text = TextBlob(line[1])
     numnouns.append(len(text.noun_phrases))
+    pos.append(text.pos_tags)
     polarity.append(text.sentiment.polarity)
     subjectivity.append(text.sentiment.subjectivity)
     retweetcount.append(line[11])
@@ -177,9 +200,15 @@ xTe = np.zeros((N, feature_dimension))
 for x in range(0, N):
     row = np.zeros(feature_dimension)
     tweet = text_words[x]
+    pos_row = np.zeros(50)
+    tweetLen = len(tweet)
     for word in tweet:
         row[hash(word) % feature_dimension] = 1
+    for word,tag in pos[x]:
+        pos_row[hash(tag) % 50] += 1
     xTe[x, :] = row
+    np.append(xTe[x, :], pos_row)
+    np.append(xTe[x, :], tweetLen)
 
 favcount = np.reshape(favcount, (len(favcount),1))
 retweetcount = np.reshape(retweetcount, (len(retweetcount),1))
@@ -202,29 +231,26 @@ xTe = np.append(xTe, subjectivity, 1)
 xTe = np.append(xTe, https, 1)
 xTe = np.append(xTe, hashtag, 1)
 xTe = np.append(xTe, numnouns, 1)
+
+
 # get forest
-# trees=forest(xTr,yTr,30)
-clf = RandomForestClassifier(n_estimators=1000, max_depth=None,random_state=0)
-# clf = MultinomialNB()
+clf = RandomForestClassifier(n_estimators=1000, max_depth=None,random_state=0 ,max_features="sqrt")
 a = arange(np.shape(xTr)[0])
 N = len(a)
 rand_idx = np.random.randint(len(a), size=len(a))
 xTr = xTr[rand_idx]
 yTr = yTr[rand_idx]
-# ind = np.floor(len(a)*0.8)
-# print(a)
-# clf.fit(xTr[:int(N*0.8)], yTr[:int(N*0.8)])
-clf.fit(xTr, yTr)
-# preds = clf.predict(xTr[int(N*0.8):])
-# print("Training error: %.4f" % np.mean(preds != yTr[int(N*0.8):]))
+clf.fit(xTr[:int(N*0.8)], yTr[:int(N*0.8)])
+# clf.fit(xTr, yTr)
+preds = clf.predict(xTr[int(N*0.8):])
+print("Validation error: %.4f" % np.mean(preds != yTr[int(N*0.8):]))
 
-# preds = np.zeros(N)
-results = ['ID,Label\n']
-preds = clf.predict(xTe)
-# print(preds)
-for i in range(len(preds)):
-    results.append(str(i) + "," + str(int(preds[i])) + "\n")
-f = open("preds4.csv", "w+")
-f.writelines(results)
-f.close()
+
+# results = ['ID,Label\n']
+# preds = clf.predict(xTe)
+# for i in range(len(preds)):
+#     results.append(str(i) + "," + str(int(preds[i])) + "\n")
+# f = open("preds7.csv", "w+")
+# f.writelines(results)
+# f.close()
 
