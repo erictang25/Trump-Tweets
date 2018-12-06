@@ -70,21 +70,24 @@ crookedHillary = []
 numnouns = []
 pos = []
 for line in data[1:]:
-    puncs = re.compile("[,.!?;:-]")
+    puncs = re.compile("[,.!?;:@#]")
     line[1] = re.sub(puncs, " ", line[1])
+    line[1] = line[1].lower();
+    # print(line[1])
     if '@' in line[1]:
         atsign.append(1)
     else:
         atsign.append(0)
-    if 'https' in line[1]:
+    if 'http://' in line[1]:
         https.append(1)
     else:
         https.append(0)
-    if '#' in line[1]:
+    if 'makeamericagreatagain' in line[1]:
         hashtag.append(1)
     else:
         hashtag.append(0)
-    if 'Crooked Hillary' in line[1]:
+    if 'crooked hillary' in line[1]:
+        print("It works")
         crookedHillary.append(1)
     else:
         crookedHillary.append(0)
@@ -136,11 +139,11 @@ xTr = np.append(xTr, favcount, 1)
 xTr = np.append(xTr, retweetcount, 1)
 xTr = np.append(xTr, date, 1)
 xTr = np.append(xTr, mins, 1)
-xTr = np.append(xTr, atsign, 1)
+# xTr = np.append(xTr, atsign, 1)
 xTr = np.append(xTr, polarity, 1)
 xTr = np.append(xTr, subjectivity, 1)
 xTr = np.append(xTr, https, 1)
-xTr = np.append(xTr, hashtag, 1)
+# xTr = np.append(xTr, hashtag, 1)
 xTr = np.append(xTr, numnouns, 1)
 xTr = np.append(xTr, crookedHillary, 1)
 
@@ -166,21 +169,29 @@ https = []
 hashtag = []
 numnouns = []
 pos = []
+crookedHillary = []
+
 for line in data[1:]:
-    puncs = re.compile("[,.!?;:-]")
+    puncs = re.compile("[,.!?;:@#]")
     line[1] = re.sub(puncs, " ", line[1])
+    line[1] = line[1].lower();
+
     if '@' in line[1]:
         atsign.append(1)
     else:
         atsign.append(0)
-    if 'https' in line[1]:
+    if 'http://' in line[1]:
         https.append(1)
     else:
         https.append(0)
-    if '#' in line[1]:
+    if 'makeamericagreatagain' in line[1]:
         hashtag.append(1)
     else:
         hashtag.append(0)
+    if 'crooked hillary' in line[1]:
+        crookedHillary.append(1)
+    else:
+        crookedHillary.append(0)
     favcount.append(line[3])
     text = TextBlob(line[1])
     numnouns.append(len(text.noun_phrases))
@@ -220,37 +231,43 @@ subjectivity = np.reshape(subjectivity, (len(retweetcount),1))
 https = np.reshape(https, (len(retweetcount), 1))
 hashtag = np.reshape(hashtag, (len(retweetcount), 1))
 numnouns = np.reshape(numnouns, (len(retweetcount), 1))
+crookedHillary = np.reshape(crookedHillary, (len(retweetcount), 1))
 
 xTe = np.append(xTe, favcount, 1)
 xTe = np.append(xTe, retweetcount, 1)
 xTe = np.append(xTe, date, 1)
 xTe = np.append(xTe, mins, 1)
-xTe = np.append(xTe, atsign, 1)
+# xTe = np.append(xTe, atsign, 1)
 xTe = np.append(xTe, polarity, 1)
 xTe = np.append(xTe, subjectivity, 1)
 xTe = np.append(xTe, https, 1)
-xTe = np.append(xTe, hashtag, 1)
+# xTe = np.append(xTe, hashtag, 1)
 xTe = np.append(xTe, numnouns, 1)
+xTe = np.append(xTe, crookedHillary, 1)
 
 
 # get forest
-clf = RandomForestClassifier(n_estimators=1000, max_depth=None,random_state=0 ,max_features="sqrt")
 a = arange(np.shape(xTr)[0])
 N = len(a)
+
+clf = RandomForestClassifier(n_estimators=1000, max_depth=None, random_state=0, max_features="sqrt")
 rand_idx = np.random.randint(len(a), size=len(a))
 xTr = xTr[rand_idx]
 yTr = yTr[rand_idx]
+
 clf.fit(xTr[:int(N*0.8)], yTr[:int(N*0.8)])
-# clf.fit(xTr, yTr)
 preds = clf.predict(xTr[int(N*0.8):])
 print("Validation error: %.4f" % np.mean(preds != yTr[int(N*0.8):]))
 
-
+# clf.fit(xTr, yTr)
+# preds = clf.predict(xTr)
+# print("Validation error: %.4f" % np.mean(preds != yTr))
+#
 # results = ['ID,Label\n']
 # preds = clf.predict(xTe)
 # for i in range(len(preds)):
 #     results.append(str(i) + "," + str(int(preds[i])) + "\n")
-# f = open("preds7.csv", "w+")
+# f = open("preds10.csv", "w+")
 # f.writelines(results)
 # f.close()
 
