@@ -12,6 +12,7 @@ from scipy.io import loadmat
 import time
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.datasets import make_classification
+from sklearn.model_selection import KFold
 from datetime import datetime
 
 
@@ -61,36 +62,26 @@ favcount = []
 retweetcount = []
 date = []
 mins = []
-atsign = []
 polarity = []
 subjectivity = []
-https = []
-hashtag = []
 crookedHillary = []
 numnouns = []
 pos = []
+fakenews = []
 for line in data[1:]:
-    puncs = re.compile("[,.!?;:@#]")
+    puncs = re.compile("[,?!.;:]")
     line[1] = re.sub(puncs, " ", line[1])
-    line[1] = line[1].lower();
-    # print(line[1])
-    if '@' in line[1]:
-        atsign.append(1)
-    else:
-        atsign.append(0)
-    if 'http://' in line[1]:
-        https.append(1)
-    else:
-        https.append(0)
-    if 'makeamericagreatagain' in line[1]:
-        hashtag.append(1)
-    else:
-        hashtag.append(0)
-    if 'crooked hillary' in line[1]:
-        print("It works")
+    # line[1] = line[1].lower()
+
+    if 'Crooked Hillary' in line[1]:
         crookedHillary.append(1)
     else:
         crookedHillary.append(0)
+    if 'fake news' in line[1]:
+        fakenews.append(1)
+    else:
+        fakenews.append(0)
+
     favcount.append(line[3])
     text = TextBlob(line[1])
     numnouns.append(len(text.noun_phrases))
@@ -103,6 +94,7 @@ for line in data[1:]:
     mins.append(m)
     words = line[1].split()
     text_words.append(words)
+
 
 feature_dimension = 1000
 N = len(text_words)
@@ -127,26 +119,21 @@ favcount = np.reshape(favcount, (len(favcount),1))
 retweetcount = np.reshape(retweetcount, (len(retweetcount),1))
 date = np.reshape(date, (len(retweetcount),1))
 mins = np.reshape(mins, (len(retweetcount),1))
-atsign = np.reshape(atsign, (len(retweetcount),1))
 polarity = np.reshape(polarity, (len(retweetcount),1))
 subjectivity = np.reshape(subjectivity, (len(retweetcount),1))
-https = np.reshape(https, (len(retweetcount), 1))
-hashtag = np.reshape(hashtag, (len(retweetcount), 1))
 numnouns = np.reshape(numnouns, (len(retweetcount), 1))
 crookedHillary = np.reshape(crookedHillary, (len(retweetcount), 1))
+fakenews = np.reshape(fakenews, (len(retweetcount), 1))
 
 xTr = np.append(xTr, favcount, 1)
 xTr = np.append(xTr, retweetcount, 1)
 xTr = np.append(xTr, date, 1)
 xTr = np.append(xTr, mins, 1)
-# xTr = np.append(xTr, atsign, 1)
 xTr = np.append(xTr, polarity, 1)
 xTr = np.append(xTr, subjectivity, 1)
-xTr = np.append(xTr, https, 1)
-# xTr = np.append(xTr, hashtag, 1)
 xTr = np.append(xTr, numnouns, 1)
 xTr = np.append(xTr, crookedHillary, 1)
-
+xTr = np.append(xTr, fakenews, 1)
 
 yTr = np.zeros(N)
 for i in range(0,N):
@@ -162,36 +149,25 @@ favcount = []
 retweetcount = []
 date = []
 mins = []
-atsign = []
 polarity = []
 subjectivity = []
-https = []
-hashtag = []
 numnouns = []
 pos = []
 crookedHillary = []
-
+fakenews = []
 for line in data[1:]:
-    puncs = re.compile("[,.!?;:@#]")
+    puncs = re.compile("[,.?!;:]")
     line[1] = re.sub(puncs, " ", line[1])
-    line[1] = line[1].lower();
+    # line[1] = line[1].lower()
 
-    if '@' in line[1]:
-        atsign.append(1)
-    else:
-        atsign.append(0)
-    if 'http://' in line[1]:
-        https.append(1)
-    else:
-        https.append(0)
-    if 'makeamericagreatagain' in line[1]:
-        hashtag.append(1)
-    else:
-        hashtag.append(0)
-    if 'crooked hillary' in line[1]:
+    if 'Crooked Hillary' in line[1]:
         crookedHillary.append(1)
     else:
         crookedHillary.append(0)
+    if 'fake news' in line[1]:
+        fakenews.append(1)
+    else:
+        fakenews.append(0)
     favcount.append(line[3])
     text = TextBlob(line[1])
     numnouns.append(len(text.noun_phrases))
@@ -225,25 +201,21 @@ favcount = np.reshape(favcount, (len(favcount),1))
 retweetcount = np.reshape(retweetcount, (len(retweetcount),1))
 date = np.reshape(date, (len(retweetcount),1))
 mins = np.reshape(mins, (len(retweetcount),1))
-atsign = np.reshape(atsign, (len(retweetcount),1))
 polarity = np.reshape(polarity, (len(retweetcount),1))
 subjectivity = np.reshape(subjectivity, (len(retweetcount),1))
-https = np.reshape(https, (len(retweetcount), 1))
-hashtag = np.reshape(hashtag, (len(retweetcount), 1))
 numnouns = np.reshape(numnouns, (len(retweetcount), 1))
 crookedHillary = np.reshape(crookedHillary, (len(retweetcount), 1))
+fakenews = np.reshape(fakenews, (len(retweetcount), 1))
 
 xTe = np.append(xTe, favcount, 1)
 xTe = np.append(xTe, retweetcount, 1)
 xTe = np.append(xTe, date, 1)
 xTe = np.append(xTe, mins, 1)
-# xTe = np.append(xTe, atsign, 1)
 xTe = np.append(xTe, polarity, 1)
 xTe = np.append(xTe, subjectivity, 1)
-xTe = np.append(xTe, https, 1)
-# xTe = np.append(xTe, hashtag, 1)
 xTe = np.append(xTe, numnouns, 1)
 xTe = np.append(xTe, crookedHillary, 1)
+xTe = np.append(xTe, fakenews, 1)
 
 
 # get forest
@@ -251,23 +223,26 @@ a = arange(np.shape(xTr)[0])
 N = len(a)
 
 clf = RandomForestClassifier(n_estimators=1000, max_depth=None, random_state=0, max_features="sqrt")
+
 rand_idx = np.random.randint(len(a), size=len(a))
 xTr = xTr[rand_idx]
 yTr = yTr[rand_idx]
 
-clf.fit(xTr[:int(N*0.8)], yTr[:int(N*0.8)])
-preds = clf.predict(xTr[int(N*0.8):])
-print("Validation error: %.4f" % np.mean(preds != yTr[int(N*0.8):]))
+kf = KFold(n_splits=4,shuffle=True, random_state=None)
+for train_index, test_index in kf.split(xTr):
+    clf.fit(xTr[train_index], yTr[train_index])
+    preds = clf.predict(xTr[test_index])
+    print("Validation error: %.4f" % np.mean(preds != yTr[test_index]))
 
-# clf.fit(xTr, yTr)
-# preds = clf.predict(xTr)
-# print("Validation error: %.4f" % np.mean(preds != yTr))
-#
-# results = ['ID,Label\n']
-# preds = clf.predict(xTe)
-# for i in range(len(preds)):
-#     results.append(str(i) + "," + str(int(preds[i])) + "\n")
-# f = open("preds10.csv", "w+")
-# f.writelines(results)
-# f.close()
+clf.fit(xTr, yTr)
+preds = clf.predict(xTr)
+print("Validation error: %.4f" % np.mean(preds != yTr))
+
+results = ['ID,Label\n']
+preds = clf.predict(xTe)
+for i in range(len(preds)):
+    results.append(str(i) + "," + str(int(preds[i])) + "\n")
+f = open("preds13.csv", "w+")
+f.writelines(results)
+f.close()
 
